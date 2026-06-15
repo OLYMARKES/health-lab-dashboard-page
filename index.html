@@ -66,7 +66,7 @@
     .cycle-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:14px; }
     .cycle-head h2 { font-size:17px; margin-bottom:4px; }
     .cycle-head p { margin:0; color:var(--muted); font-weight:650; max-width:740px; }
-    .cycle-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .cycle-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
     .cycle-card { border:1px solid var(--line); border-radius:8px; padding:13px; background:#fbfcfe; min-height:124px; display:flex; flex-direction:column; justify-content:space-between; gap:10px; }
     .cycle-card h3 { margin:0; font-size:13px; color:var(--muted); font-weight:780; }
     .cycle-value { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
@@ -218,9 +218,11 @@
     function cyclePanel(patient) {
       const progesterone = latestMatching(patient, /прогестерон/);
       const hcg = latestMatching(patient, /хгч/);
-      if (!progesterone && !hcg) return '';
+      const amh = latestMatching(patient, /антимюллер|амг|amh/);
+      if (!progesterone && !hcg && !amh) return '';
       const progValue = progesterone ? numericValue(progesterone.latestResult) : null;
       const hcgValue = hcg ? numericValue(hcg.latestResult) : null;
+      const amhValue = amh ? numericValue(amh.latestResult) : null;
       const progNgMl = progValue !== null && /нмоль\/л/i.test(progesterone.unit || '') ? progValue / 3.18 : null;
       const progText = progesterone
         ? (progValue !== null && progValue < 13.1
@@ -232,9 +234,15 @@
           ? 'ХГЧ отрицательный: беременность по этому анализу не подтверждается.'
           : 'ХГЧ выше небеременного уровня: нужна ручная проверка даты и клинического контекста.')
         : 'Свежего ХГЧ нет в базе.';
+      const amhText = amh
+        ? (amhValue !== null && amhValue >= 1
+          ? 'В пределах референса лаборатории. АМГ отражает овариальный резерв, но не качество яйцеклеток и не факт овуляции в этом цикле.'
+          : 'Низкий или пограничный АМГ: интерпретировать лучше с врачом и УЗИ AFC.')
+        : 'Свежего АМГ нет в базе.';
       const progDisplay = progesterone ? esc(((progesterone.latestResult || '') + ' ' + (progesterone.unit || '')).trim()) : 'нет данных';
       const progExtra = progNgMl !== null ? '<span>≈ ' + progNgMl.toFixed(2) + ' нг/мл</span>' : '';
       const hcgDisplay = hcg ? esc(((hcg.latestResult || '') + ' ' + (hcg.unit || '')).trim()) : 'нет данных';
+      const amhDisplay = amh ? esc(((amh.latestResult || '') + ' ' + (amh.unit || '')).trim()) : 'нет данных';
       const nextStep = progesterone && hcg && hcgValue !== null && hcgValue < 5 && progValue !== null && progValue < 13.1
         ? 'Если месячные не начинаются, логично повторить ХГЧ через 48-72 часа или прогестерон через 7 дней после подтвержденной овуляции.'
         : 'Для оценки овуляции прогестерон информативнее сдавать примерно через 7 дней после подтвержденной овуляции.';
@@ -243,6 +251,7 @@
         '<div class="cycle-grid">' +
           '<article class="cycle-card"><h3>Прогестерон</h3><div class="cycle-value"><strong>' + progDisplay + '</strong>' + progExtra + '</div><p>' + esc(progText) + '</p></article>' +
           '<article class="cycle-card"><h3>ХГЧ</h3><div class="cycle-value"><strong>' + hcgDisplay + '</strong></div><p>' + esc(hcgText) + '</p></article>' +
+          '<article class="cycle-card"><h3>АМГ</h3><div class="cycle-value"><strong>' + amhDisplay + '</strong></div><p>' + esc(amhText) + '</p></article>' +
           '<article class="cycle-card"><h3>Что проверить дальше</h3><p>' + esc(nextStep) + '</p></article>' +
         '</div>' +
       '</section>';
