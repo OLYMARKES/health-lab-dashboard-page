@@ -3,156 +3,161 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Patient Lab Dashboard</title>
+  <title>Lab Biomarker Dashboard</title>
   <style>
     :root {
-      --bg:#f7f8fb; --panel:#fff; --ink:#171a22; --muted:#737b8b; --soft:#a4acba;
-      --line:#e8ebf2; --line2:#f1f3f7; --blue:#4f5df7; --cyan:#48c9e8;
-      --green:#22b573; --red:#ff5a66; --amber:#e8b24c; --shadow:0 12px 34px rgba(20,28,45,.045);
+      --bg:#f6f7fa; --panel:#fff; --ink:#171a22; --muted:#6f7787; --soft:#98a1b1;
+      --line:#e7eaf1; --line2:#f0f2f6; --blue:#4f5df7; --teal:#25bfd0;
+      --green:#23a96f; --red:#e95a64; --amber:#d79a2b; --violet:#7b61d8;
+      --shadow:0 16px 38px rgba(23,31,49,.055);
     }
     * { box-sizing:border-box; }
     body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:14px; letter-spacing:0; }
-    .app { min-height:100vh; display:grid; grid-template-columns:72px minmax(1180px,1fr); }
+    button, input, select { font:inherit; letter-spacing:0; }
+    .app { min-height:100vh; display:grid; grid-template-columns:72px minmax(1160px,1fr); }
     .rail { position:sticky; top:0; height:100vh; padding:24px 14px; background:var(--panel); border-right:1px solid var(--line); display:flex; flex-direction:column; align-items:center; gap:14px; }
-    .rail button { width:40px; height:40px; border:1px solid transparent; border-radius:8px; background:transparent; color:#697284; font-size:18px; cursor:pointer; }
-    .rail button.active { background:#242832; color:#fff; box-shadow:var(--shadow); }
+    .rail button { width:40px; height:40px; border:1px solid transparent; border-radius:8px; background:transparent; color:#6d7585; font-size:18px; cursor:pointer; }
+    .rail button.active { background:#232832; color:#fff; box-shadow:var(--shadow); }
     .rail .spacer { flex:1; }
-    main { padding:28px 32px 42px; }
-    .dashboard { max-width:1380px; margin:0 auto; }
-    header { height:50px; display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:18px; }
-    h1 { margin:0; font-size:22px; line-height:1.1; font-weight:760; }
-    h2 { margin:0; font-size:15px; line-height:1.2; font-weight:760; }
-    .date-pill { height:40px; display:inline-flex; align-items:center; gap:10px; padding:0 14px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:#5d6678; font-weight:650; white-space:nowrap; box-shadow:0 6px 18px rgba(20,28,45,.035); }
-    .patient-tabs { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
-    .patient-tab { height:40px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:0 14px; color:#596274; font-weight:760; cursor:pointer; }
-    .patient-tab.active { background:#242832; color:#fff; border-color:#242832; }
-    .top-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+    main { padding:28px 32px 42px; min-width:0; }
+    .dashboard { max-width:1420px; margin:0 auto; }
+    header { min-height:52px; display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:16px; }
+    h1 { margin:0; font-size:23px; line-height:1.05; font-weight:780; }
+    h2 { margin:0; font-size:16px; line-height:1.2; font-weight:780; }
+    h3 { margin:0; font-size:14px; line-height:1.25; font-weight:780; }
+    .date-pill { height:40px; display:inline-flex; align-items:center; gap:10px; padding:0 14px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:#5e6777; font-weight:700; white-space:nowrap; box-shadow:0 6px 18px rgba(20,28,45,.035); }
+    .patient-tabs, .mode-tabs, .category-tabs { display:flex; flex-wrap:wrap; gap:8px; }
+    .patient-tabs { margin-bottom:12px; }
+    .patient-tab, .mode-tab, .category-chip { height:38px; border:1px solid var(--line); border-radius:8px; background:#fff; color:#596273; padding:0 12px; font-weight:760; cursor:pointer; }
+    .patient-tab.active, .mode-tab.active, .category-chip.active { background:#232832; border-color:#232832; color:#fff; }
+    .control-row { margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .search { width:min(420px,100%); height:38px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:0 12px; color:var(--ink); }
     .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:var(--shadow); overflow:hidden; }
-    .card-head { height:54px; padding:0 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .card-head span { color:var(--muted); font-weight:700; }
-    .stat-body { padding:16px; min-height:126px; display:flex; flex-direction:column; justify-content:space-between; }
-    .stat-line { display:flex; align-items:baseline; gap:10px; }
-    .stat-line strong { font-size:34px; line-height:1; font-weight:760; }
-    .delta { font-weight:750; color:var(--green); white-space:nowrap; }
-    .delta.warn { color:var(--amber); }
-    .delta.alert { color:var(--red); }
-    .soft-bars { height:42px; display:flex; align-items:end; gap:6px; }
-    .soft-bars i { flex:1; display:block; min-width:10px; border-radius:4px 4px 0 0; background:linear-gradient(180deg,rgba(79,93,247,.95),rgba(79,93,247,.05)); }
-    .toolbar { margin-top:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; }
-    .search { width:min(420px,100%); height:38px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:0 12px; font:inherit; }
-    .section-nav { display:flex; flex-wrap:wrap; gap:8px; }
-    .section-chip { height:36px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:0 11px; color:#596274; font-weight:720; cursor:pointer; }
-    .section-chip.active { background:#242832; color:#fff; border-color:#242832; }
+    .card-head { min-height:52px; padding:0 15px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .card-head span { color:var(--muted); font-weight:720; }
     .patient-page { display:none; }
     .patient-page.active { display:block; }
-    .category-section { margin-top:16px; }
-    .section-title { height:48px; display:flex; align-items:center; justify-content:space-between; gap:16px; color:var(--muted); }
-    .section-title h2 { color:var(--ink); font-size:17px; }
-    .freshness-section { margin-top:16px; display:grid; grid-template-columns:330px minmax(0,1fr); gap:14px; }
-    .freshness-summary { padding:16px; min-height:250px; display:flex; flex-direction:column; gap:14px; }
-    .freshness-summary h2 { font-size:17px; }
-    .freshness-total { display:flex; align-items:baseline; gap:10px; }
-    .freshness-total strong { font-size:36px; line-height:1; }
-    .freshness-bar { height:14px; display:flex; overflow:hidden; border-radius:7px; background:#eef1f6; }
-    .freshness-bar span { min-width:2px; }
-    .freshness-due { background:var(--red); }
-    .freshness-soon { background:var(--amber); }
-    .freshness-fresh { background:var(--green); }
-    .freshness-legend { display:grid; gap:8px; color:var(--muted); font-weight:720; }
-    .freshness-legend div { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .freshness-legend i { width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:7px; }
-    .freshness-list { min-height:250px; }
-    .cycle-panel { margin-top:16px; padding:16px; }
-    .cycle-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:14px; }
-    .cycle-head h2 { font-size:17px; margin-bottom:4px; }
-    .cycle-head p { margin:0; color:var(--muted); font-weight:650; max-width:740px; }
-    .cycle-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
-    .cycle-card { border:1px solid var(--line); border-radius:8px; padding:13px; background:#fbfcfe; min-height:124px; display:flex; flex-direction:column; justify-content:space-between; gap:10px; }
-    .cycle-card h3 { margin:0; font-size:13px; color:var(--muted); font-weight:780; }
-    .cycle-value { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
-    .cycle-value strong { font-size:26px; line-height:1; }
-    .cycle-value span { color:var(--muted); font-weight:740; }
-    .cycle-card p { margin:0; color:#4f596a; line-height:1.38; font-weight:650; }
-    .mini-table { width:100%; border-collapse:collapse; table-layout:fixed; }
-    .mini-table th { height:42px; padding:0 12px; color:var(--muted); text-align:left; font-size:12px; font-weight:780; border-bottom:1px solid var(--line); }
-    .mini-table td { padding:10px 12px; border-bottom:1px solid var(--line2); vertical-align:top; font-weight:650; }
-    .mini-table td:first-child { font-weight:780; color:#252b37; }
-    .mini-table small { display:block; margin-top:3px; color:var(--muted); font-weight:650; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .matrix-section { margin-top:16px; }
-    .matrix-wrap { overflow:auto; max-height:520px; }
-    .matrix { min-width:980px; width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; }
-    .matrix th { position:sticky; top:0; z-index:3; height:42px; padding:0 10px; background:#fbfcfe; color:var(--muted); border-bottom:1px solid var(--line); text-align:left; font-size:12px; font-weight:780; }
-    .matrix td { height:48px; padding:8px 10px; border-bottom:1px solid var(--line2); font-weight:650; vertical-align:middle; }
-    .matrix th:first-child, .matrix td:first-child { position:sticky; left:0; z-index:2; width:250px; background:#fff; border-right:1px solid var(--line); }
-    .matrix th:first-child { z-index:4; background:#fbfcfe; }
-    .matrix .trend-col { width:104px; }
-    .matrix .date-col { width:112px; }
-    .matrix-test { color:#252b37; font-weight:800; line-height:1.25; }
-    .matrix-test small { display:block; color:var(--muted); font-weight:650; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .matrix-cell { display:flex; flex-direction:column; gap:3px; }
-    .matrix-cell b { font-size:13px; line-height:1.1; overflow-wrap:anywhere; }
-    .matrix-cell small { color:var(--muted); font-size:11px; }
-    .spark-mini { width:84px; height:30px; display:block; }
-    .status-dot { width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:6px; background:#c7ceda; }
-    .status-ok { background:var(--green); }
-    .status-high { background:var(--red); }
-    .status-low { background:var(--amber); }
-    .status-text { background:#b4bdca; }
-    .latest-section { margin-top:16px; }
-    .latest-category-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
-    .latest-category { min-height:180px; }
-    .latest-category-head { height:50px; padding:0 14px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .latest-category-head h3 { margin:0; font-size:15px; line-height:1.2; font-weight:780; color:#252b37; }
-    .latest-category-head span { color:var(--muted); font-weight:720; white-space:nowrap; }
-    .latest-list { display:grid; }
-    .latest-row { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(120px,.85fr) 94px 64px; gap:10px; align-items:center; min-height:42px; padding:8px 14px; border-bottom:1px solid var(--line2); }
-    .latest-row:last-child { border-bottom:0; }
-    .latest-name { min-width:0; font-weight:760; color:#252b37; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .latest-result { min-width:0; font-weight:780; overflow-wrap:anywhere; }
-    .latest-date { color:var(--muted); font-size:12px; font-weight:760; white-space:nowrap; }
-    .analysis-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
-    .analysis-card { min-height:262px; display:flex; flex-direction:column; }
-    .analysis-head { padding:14px 15px 10px; border-bottom:1px solid var(--line2); min-height:86px; }
-    .analysis-name { margin:0 0 7px; font-size:15px; line-height:1.25; font-weight:780; color:#242936; }
-    .analysis-meta { display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--muted); font-weight:650; }
-    .latest { padding:12px 15px 6px; display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-    .latest strong { font-size:26px; line-height:1; }
-    .latest small { color:var(--muted); font-weight:700; }
-    .spark { height:76px; margin:0 15px; }
-    .spark svg { width:100%; height:76px; display:block; overflow:visible; }
-    .timeline { margin-top:auto; padding:10px 15px 14px; display:flex; gap:8px; overflow-x:auto; border-top:1px solid var(--line2); }
-    .point { min-width:86px; padding:8px 9px; border:1px solid var(--line); border-radius:8px; background:#fbfcfe; }
-    .point b { display:block; font-size:13px; margin-bottom:4px; }
-    .point span { display:block; color:var(--muted); font-size:12px; font-weight:700; }
-    .badge { display:inline-flex; align-items:center; min-height:24px; padding:3px 8px; border-radius:6px; font-weight:760; }
-    .badge-ok { background:rgba(34,181,115,.12); color:#159064; }
-    .badge-high { background:rgba(255,90,102,.12); color:#d1454f; }
-    .badge-low { background:rgba(232,178,76,.16); color:#a87819; }
+    .mode-panel { display:none; }
+    .mode-panel.active { display:block; }
+    .top-grid { display:grid; grid-template-columns:1.15fr repeat(3,1fr); gap:14px; }
+    .stat-card { min-height:144px; padding:15px; display:flex; flex-direction:column; justify-content:space-between; gap:12px; }
+    .stat-label { color:var(--muted); font-weight:760; }
+    .stat-value { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+    .stat-value strong { font-size:34px; line-height:1; font-weight:780; }
+    .delta { font-weight:780; color:var(--green); }
+    .delta.warn { color:var(--amber); }
+    .delta.alert { color:var(--red); }
+    .status-track { height:14px; border-radius:7px; overflow:hidden; background:#eef1f6; display:flex; }
+    .status-track span { min-width:2px; }
+    .st-ok { background:var(--green); } .st-high { background:var(--red); } .st-low { background:var(--amber); } .st-text { background:#b5bdca; }
+    .overview-grid { margin-top:14px; display:grid; grid-template-columns:minmax(0,1.45fr) minmax(360px,.8fr); gap:14px; align-items:start; }
+    .system-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; padding:14px; }
+    .system-card { border:1px solid var(--line); border-radius:8px; background:#fbfcfe; padding:13px; min-height:128px; }
+    .system-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+    .system-head b { font-size:15px; }
+    .system-score { font-size:24px; font-weight:780; }
+    .system-meta { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; color:var(--muted); font-size:12px; font-weight:720; }
+    .system-meta strong { display:block; margin-bottom:3px; color:var(--ink); font-size:14px; }
+    .action-list { display:grid; }
+    .action-item { display:grid; grid-template-columns:22px minmax(0,1fr) auto; gap:10px; align-items:center; min-height:54px; padding:10px 14px; border-bottom:1px solid var(--line2); }
+    .action-item:last-child { border-bottom:0; }
+    .action-dot { width:10px; height:10px; border-radius:50%; background:var(--blue); }
+    .action-title { font-weight:780; color:#252b37; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .action-sub { display:block; margin-top:3px; color:var(--muted); font-size:12px; font-weight:680; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .changes-grid { margin-top:14px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+    .change-list { max-height:350px; overflow:auto; }
+    .change-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:center; min-height:50px; padding:10px 14px; border-bottom:1px solid var(--line2); }
+    .change-row:last-child { border-bottom:0; }
+    .change-name { font-weight:760; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .change-sub { display:block; color:var(--muted); font-size:12px; font-weight:650; margin-top:3px; }
+    .biomarker-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+    .biomarker-card { min-height:256px; display:flex; flex-direction:column; cursor:pointer; transition:transform .12s ease, border-color .12s ease; }
+    .biomarker-card:hover { transform:translateY(-1px); border-color:#d8ddea; }
+    .biomarker-top { padding:14px 15px 10px; min-height:86px; border-bottom:1px solid var(--line2); }
+    .biomarker-name { margin:0 0 8px; font-size:15px; line-height:1.25; font-weight:790; color:#242936; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+    .biomarker-meta { display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--muted); font-weight:700; }
+    .latest { padding:12px 15px 4px; display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+    .latest strong { font-size:25px; line-height:1; overflow-wrap:anywhere; }
+    .latest small { color:var(--muted); font-weight:760; white-space:nowrap; }
+    .spark { height:86px; margin:0 15px; }
+    .spark svg { width:100%; height:86px; display:block; overflow:visible; }
+    .card-timeline { margin-top:auto; padding:10px 15px 14px; display:flex; gap:8px; overflow-x:auto; border-top:1px solid var(--line2); }
+    .point { min-width:88px; border:1px solid var(--line); border-radius:8px; background:#fbfcfe; padding:8px 9px; }
+    .point b { display:block; margin-bottom:3px; font-size:12px; }
+    .point span { display:block; color:var(--muted); font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .badge { display:inline-flex; align-items:center; justify-content:center; min-height:24px; border-radius:6px; padding:3px 8px; font-weight:780; white-space:nowrap; }
+    .badge-ok { background:rgba(35,169,111,.12); color:#16875a; }
+    .badge-high { background:rgba(233,90,100,.13); color:#c6444d; }
+    .badge-low { background:rgba(215,154,43,.17); color:#946713; }
     .badge-text { background:#eef1f6; color:#626b7c; }
-    .empty { padding:24px; color:var(--muted); }
+    .table-wrap { overflow:auto; max-height:650px; }
+    table { width:100%; border-collapse:separate; border-spacing:0; }
+    th { position:sticky; top:0; z-index:2; height:42px; padding:0 12px; border-bottom:1px solid var(--line); background:#fbfcfe; color:var(--muted); text-align:left; font-size:12px; font-weight:780; }
+    td { padding:10px 12px; border-bottom:1px solid var(--line2); vertical-align:middle; font-weight:650; color:#3f4858; }
+    .test-cell { min-width:280px; color:#242936; font-weight:790; }
+    .muted { display:block; margin-top:3px; color:var(--muted); font-size:12px; font-weight:650; }
+    .timeline-panel { display:grid; gap:12px; }
+    .date-group { display:grid; grid-template-columns:150px minmax(0,1fr); gap:12px; }
+    .date-stamp { position:sticky; top:12px; height:76px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:12px; box-shadow:var(--shadow); }
+    .date-stamp strong { display:block; font-size:18px; }
+    .date-stamp span { color:var(--muted); font-weight:720; }
+    .date-items { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .date-item { border:1px solid var(--line); border-radius:8px; background:#fff; padding:11px; min-height:82px; }
+    .date-item b { display:block; margin-bottom:7px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .graph-layout { display:grid; grid-template-columns:330px minmax(0,1fr); gap:14px; }
+    .marker-list { max-height:720px; overflow:auto; }
+    .marker-button { width:100%; min-height:54px; padding:10px 12px; border:0; border-bottom:1px solid var(--line2); background:#fff; text-align:left; cursor:pointer; }
+    .marker-button.active { background:#f4f6ff; }
+    .marker-button b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .marker-button span { display:block; margin-top:3px; color:var(--muted); font-size:12px; font-weight:650; }
+    .graph-card { min-height:520px; padding:18px; }
+    .graph-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
+    .graph-title b { display:block; font-size:20px; margin-bottom:4px; }
+    .graph-title span { color:var(--muted); font-weight:700; }
+    .big-chart { width:100%; height:330px; display:block; overflow:visible; }
+    .graph-table { margin-top:14px; max-height:220px; overflow:auto; border:1px solid var(--line); border-radius:8px; }
+    .empty { padding:24px; color:var(--muted); font-weight:700; }
+    .view-head { display:flex; align-items:center; justify-content:space-between; gap:14px; margin:14px 0; }
+    .view-head h2 { font-size:18px; }
     @media (max-width:1180px) {
-      .app { grid-template-columns:1fr; }
+      .app { display:block; }
       .rail { display:none; }
       main { padding:18px 14px; }
       .dashboard { max-width:none; }
-      .top-grid, .freshness-section, .latest-category-grid, .analysis-grid { grid-template-columns:1fr; }
-      .cycle-grid { grid-template-columns:1fr; }
-      .latest-row { grid-template-columns:minmax(0,1fr); gap:4px; align-items:start; }
-      header, .toolbar { align-items:flex-start; flex-direction:column; }
+      header, .control-row, .view-head { align-items:flex-start; flex-direction:column; }
+      .top-grid, .overview-grid, .changes-grid, .biomarker-grid, .date-items, .graph-layout, .system-grid { grid-template-columns:1fr; }
+      .date-group { grid-template-columns:1fr; }
       .search { width:100%; }
+      .table-wrap { max-height:none; }
+      th:nth-child(5), td:nth-child(5), th:nth-child(6), td:nth-child(6) { display:none; }
     }
   </style>
 </head>
 <body>
   <div class="app">
     <nav class="rail" aria-label="Navigation">
-      <button class="active" title="Patients">⌂</button><button title="Dynamics">⌁</button><button title="Sections">▥</button><button title="Status">☑</button>
-      <div class="spacer"></div><button title="Settings">⚙</button>
+      <button class="active" title="Dashboard">⌂</button>
+      <button title="Biomarkers">▦</button>
+      <button title="Timeline">⌁</button>
+      <button title="Graph">⌒</button>
+      <div class="spacer"></div>
+      <button title="Settings">⚙</button>
     </nav>
     <main>
       <div class="dashboard">
-        <header><h1>Dashboard</h1><div class="date-pill">▣ Last updated: Jun 19, 2026 ↻</div></header>
+        <header><h1>Biomarker Dashboard</h1><div class="date-pill">Last updated: Jun 19, 2026</div></header>
         <div class="patient-tabs"><button class="patient-tab active" data-patient="0">Доронина Ольга Андреевна</button><button class="patient-tab" data-patient="1">Матяш Вадим Борисович</button><button class="patient-tab" data-patient="2">Доронин Мирон Андреевич</button><button class="patient-tab" data-patient="3">Доронин Ежи Андреевич</button></div>
+        <div class="control-row">
+          <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="overview">Overview</button>
+            <button class="mode-tab" data-mode="cards">Biomarkers</button>
+            <button class="mode-tab" data-mode="table">Table</button>
+            <button class="mode-tab" data-mode="timeline">Timeline</button>
+            <button class="mode-tab" data-mode="graph">Graph</button>
+          </div>
+          <input id="search" class="search" placeholder="Поиск по анализу, категории, результату">
+        </div>
+        <div id="categoryTabs" class="category-tabs"></div>
         <div id="pages"></div>
       </div>
     </main>
@@ -161,100 +166,64 @@
   <script>
     const data = JSON.parse(document.querySelector('#patient-data').textContent);
     const pagesEl = document.querySelector('#pages');
-    const tabs = [...document.querySelectorAll('.patient-tab')];
+    const categoryTabs = document.querySelector('#categoryTabs');
+    const searchInput = document.querySelector('#search');
+    const patientTabs = [...document.querySelectorAll('.patient-tab')];
+    const modeTabs = [...document.querySelectorAll('.mode-tab')];
     let activePatient = 0;
-    let activeSection = 'all';
+    let activeMode = 'overview';
+    let activeCategory = 'all';
     let query = '';
+    let selectedKey = '';
 
     function esc(value) {
       return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     }
+    function statusLabel(status) {
+      return { high:'High', low:'Low', ok:'Optimized', text:'Text' }[status] || status;
+    }
     function badge(status) {
-      const labels = { high:'High', low:'Low', ok:'OK', text:'Text' };
       const cls = { high:'high', low:'low', ok:'ok', text:'text' }[status] || 'text';
-      return '<span class="badge badge-' + cls + '">' + (labels[status] || status) + '</span>';
-    }
-    function spark(points) {
-      const numeric = points.filter(p => typeof p.value === 'number' && Number.isFinite(p.value));
-      if (numeric.length < 2) return '<div class="spark"><svg><text x="0" y="42" fill="#8a93a3" font-size="13" font-weight="700">single result</text></svg></div>';
-      const min = Math.min(...numeric.map(p => p.value));
-      const max = Math.max(...numeric.map(p => p.value));
-      const span = max - min || 1;
-      const w = 300, h = 70;
-      const pts = numeric.map((p, i) => {
-        const x = 8 + i * ((w - 16) / Math.max(numeric.length - 1, 1));
-        const y = 10 + (1 - ((p.value - min) / span)) * (h - 22);
-        return [x, y];
-      });
-      const poly = pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
-      const circles = pts.map(p => '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3.5" fill="#4f5df7"></circle>').join('');
-      return '<div class="spark"><svg viewBox="0 0 300 70" preserveAspectRatio="none"><path d="M0 18H300 M0 36H300 M0 54H300" stroke="#eef1f6"/><polyline points="' + poly + '" fill="none" stroke="#4f5df7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' + circles + '</svg></div>';
-    }
-    function analysisCard(item) {
-      const latest = ((item.latestResult || '') + ' ' + (item.unit || '')).trim();
-      const points = item.points.map(p => '<div class="point"><b>' + esc(p.date) + '</b><span>' + esc(((p.result || '') + ' ' + (p.unit || '')).trim()) + '</span></div>').join('');
-      return '<article class="card analysis-card" data-category="' + esc(item.category) + '" data-search="' + esc((item.testName + ' ' + item.category + ' ' + item.points.map(p => p.result).join(' ')).toLowerCase()) + '">' +
-        '<div class="analysis-head"><h3 class="analysis-name">' + esc(item.testName) + '</h3><div class="analysis-meta"><span>' + esc(item.category) + '</span>' + badge(item.latestStatus) + '</div></div>' +
-        '<div class="latest"><strong>' + esc(latest) + '</strong><small>' + esc(item.latestDate) + '</small></div>' +
-        spark(item.points) +
-        '<div class="timeline">' + points + '</div>' +
-      '</article>';
+      return '<span class="badge badge-' + cls + '">' + statusLabel(status) + '</span>';
     }
     function allAnalyses(patient) {
-      return patient.categories
-        .flatMap(category => category.analyses)
+      return patient.categories.flatMap(category => category.analyses)
         .slice()
         .sort((a, b) => (b.latestDate || '').localeCompare(a.latestDate || '') || a.category.localeCompare(b.category) || a.testName.localeCompare(b.testName));
     }
-    function numericValue(text) {
-      const match = String(text || '').replace(',', '.').match(/-?\d+(?:\.\d+)?/);
-      return match ? Number(match[0]) : null;
+    function visibleAnalyses(patient) {
+      return allAnalyses(patient).filter(item => {
+        const categoryOk = activeCategory === 'all' || item.category === activeCategory;
+        const haystack = (item.testName + ' ' + item.category + ' ' + item.latestResult + ' ' + item.latestReference + ' ' + item.points.map(p => p.result).join(' ')).toLowerCase();
+        return categoryOk && (!query || haystack.includes(query));
+      });
     }
-    function latestMatching(patient, pattern) {
-      return allAnalyses(patient)
-        .filter(item => pattern.test((item.testName || '').toLowerCase()))
-        .sort((a, b) => (b.latestDate || '').localeCompare(a.latestDate || ''))[0] || null;
+    function parseNumber(value) {
+      const match = String(value || '').replace(',', '.').match(/[<>≤≥]?\s*(-?\d+(?:\.\d+)?)/);
+      return match ? Number(match[1]) : null;
     }
-    function cyclePanel(patient) {
-      const progesterone = latestMatching(patient, /прогестерон/);
-      const hcg = latestMatching(patient, /хгч/);
-      const amh = latestMatching(patient, /антимюллер|амг|amh/);
-      if (!progesterone && !hcg && !amh) return '';
-      const progValue = progesterone ? numericValue(progesterone.latestResult) : null;
-      const hcgValue = hcg ? numericValue(hcg.latestResult) : null;
-      const amhValue = amh ? numericValue(amh.latestResult) : null;
-      const progNgMl = progValue !== null && /нмоль\/л/i.test(progesterone.unit || '') ? progValue / 3.18 : null;
-      const progText = progesterone
-        ? (progValue !== null && progValue < 13.1
-          ? 'На 36 день цикла это низко для лютеиновой фазы: выраженного постовуляторного подъема на момент сдачи не видно.'
-          : 'Значение не выглядит низким для лютеиновой фазы, но оценивать лучше относительно даты овуляции.')
-        : 'Свежего прогестерона нет в базе.';
-      const hcgText = hcg
-        ? (hcgValue !== null && hcgValue < 5
-          ? 'ХГЧ отрицательный: беременность по этому анализу не подтверждается.'
-          : 'ХГЧ выше небеременного уровня: нужна ручная проверка даты и клинического контекста.')
-        : 'Свежего ХГЧ нет в базе.';
-      const amhText = amh
-        ? (amhValue !== null && amhValue >= 1
-          ? 'В пределах референса лаборатории. АМГ отражает овариальный резерв, но не качество яйцеклеток и не факт овуляции в этом цикле.'
-          : 'Низкий или пограничный АМГ: интерпретировать лучше с врачом и УЗИ AFC.')
-        : 'Свежего АМГ нет в базе.';
-      const progDisplay = progesterone ? esc(((progesterone.latestResult || '') + ' ' + (progesterone.unit || '')).trim()) : 'нет данных';
-      const progExtra = progNgMl !== null ? '<span>≈ ' + progNgMl.toFixed(2) + ' нг/мл</span>' : '';
-      const hcgDisplay = hcg ? esc(((hcg.latestResult || '') + ' ' + (hcg.unit || '')).trim()) : 'нет данных';
-      const amhDisplay = amh ? esc(((amh.latestResult || '') + ' ' + (amh.unit || '')).trim()) : 'нет данных';
-      const nextStep = progesterone && hcg && hcgValue !== null && hcgValue < 5 && progValue !== null && progValue < 13.1
-        ? 'Если месячные не начинаются, логично повторить ХГЧ через 48-72 часа или прогестерон через 7 дней после подтвержденной овуляции.'
-        : 'Для оценки овуляции прогестерон информативнее сдавать примерно через 7 дней после подтвержденной овуляции.';
-      return '<section class="card cycle-panel">' +
-        '<div class="cycle-head"><div><h2>Фертильность / цикл</h2><p>Контекст: свежий пакет от 15.06.2026, указан 36 день цикла. Это аналитическая заметка по данным, не диагноз.</p></div><span class="badge badge-low">cycle day 36</span></div>' +
-        '<div class="cycle-grid">' +
-          '<article class="cycle-card"><h3>Прогестерон</h3><div class="cycle-value"><strong>' + progDisplay + '</strong>' + progExtra + '</div><p>' + esc(progText) + '</p></article>' +
-          '<article class="cycle-card"><h3>ХГЧ</h3><div class="cycle-value"><strong>' + hcgDisplay + '</strong></div><p>' + esc(hcgText) + '</p></article>' +
-          '<article class="cycle-card"><h3>АМГ</h3><div class="cycle-value"><strong>' + amhDisplay + '</strong></div><p>' + esc(amhText) + '</p></article>' +
-          '<article class="cycle-card"><h3>Что проверить дальше</h3><p>' + esc(nextStep) + '</p></article>' +
-        '</div>' +
-      '</section>';
+    function parseRef(ref) {
+      const text = String(ref || '').replace(',', '.').replace('—', '-').replace('–', '-');
+      let m = text.match(/(-?\d+(?:\.\d+)?)\s*-\s*(-?\d+(?:\.\d+)?)/);
+      if (m) return { lo:Number(m[1]), hi:Number(m[2]) };
+      m = text.match(/<\s*(-?\d+(?:\.\d+)?)/);
+      if (m) return { lo:null, hi:Number(m[1]) };
+      m = text.match(/>\s*(-?\d+(?:\.\d+)?)/);
+      if (m) return { lo:Number(m[1]), hi:null };
+      return null;
+    }
+    function numericPoints(item) {
+      return item.points.map(p => Object.assign({}, p, { value: typeof p.value === 'number' ? p.value : parseNumber(p.result) })).filter(p => Number.isFinite(p.value));
+    }
+    function trend(item) {
+      const points = numericPoints(item);
+      if (points.length < 2) return { label:'single', cls:'', diff:null };
+      const first = points[0].value;
+      const last = points[points.length - 1].value;
+      const diff = last - first;
+      const pct = first ? diff / Math.abs(first) * 100 : 0;
+      if (Math.abs(pct) < 4) return { label:'stable', cls:'', diff:pct };
+      return { label:pct > 0 ? 'up' : 'down', cls:pct > 0 ? 'warn' : 'alert', diff:pct };
     }
     function daysSince(dateText) {
       const today = new Date((data.generatedDate || new Date().toISOString().slice(0, 10)) + 'T00:00:00');
@@ -266,47 +235,34 @@
       const name = (item.testName || '').toLowerCase();
       const category = (item.category || '').toLowerCase();
       if (/инфекции|гинекология|микрофлора|моча/.test(category)) return 365;
-      if (/ферритин|желез|трансферрин|ожсс|лжсс|глюкоз|инсулин|холест|лпнп|лпвп|триглиц|аполипопротеин|ттг|тироксин|трийод|витамин d|b12|фолиев|гемоглобин|лейкоцит|тромбоцит|креатинин|алт|аст|билирубин/.test(name)) return 180;
+      if (/ферритин|желез|трансферрин|ожсс|лжсс|глюкоз|инсулин|холест|лпнп|лпвп|триглиц|аполипопротеин|ттг|тироксин|трийод|витамин d|b12|фолиев|гемоглобин|лейкоцит|тромбоцит|креатинин|алт|аст|билирубин|прогестерон|эстрадиол|лг|фсг/.test(name)) return 180;
       return 240;
     }
     function freshness(item) {
       const age = daysSince(item.latestDate);
       const cadence = cadenceDays(item);
-      let state = 'fresh';
-      if (age >= cadence) state = 'due';
-      else if (age >= cadence * 0.8) state = 'soon';
-      return { age, cadence, state };
+      if (age >= cadence) return { state:'due', age, cadence };
+      if (age >= cadence * .8) return { state:'soon', age, cadence };
+      return { state:'fresh', age, cadence };
     }
     function isRefreshCandidate(item) {
       const name = (item.testName || '').toLowerCase();
       const category = (item.category || '').toLowerCase();
       if (/инфекции|гинекология|микрофлора|моча/.test(category)) return false;
-      const direct = /ферритин|желез|трансферрин|ожсс|лжсс|витамин d|витамин b12|фолиев|магний|кальций|омега|глюкоз|инсулин|гликир|hba1c|холест|лпнп|лпвп|триглиц|аполипопротеин|ттг|т4|т3|тироксин|трийод|антитела к тиреоглобулину|ат-тпо|гемоглобин$|гематокрит$|эритроциты$|лейкоциты$|тромбоциты$|соэ$|билирубин|креатинин|мочевина|альбумин|кортизол|прогестерон|эстрадиол|пролактин|лг$|фсг$|гомоцистеин|с-реактив|crp|фибриноген|ачтв|мно|d-димер|д-димер/.test(name);
-      const liverEnzyme = /(^|[\s(])алт($|[\s)])|(^|[\s(])аст($|[\s)])|аланинаминотрансфераза|аспартатаминотрансфераза/.test(name);
-      return direct || liverEnzyme;
+      return /ферритин|желез|трансферрин|ожсс|лжсс|витамин|магний|кальций|глюкоз|инсулин|холест|лпнп|лпвп|триглиц|аполипопротеин|липопротеин|ттг|т4|т3|тироксин|трийод|гемоглобин|гематокрит|лейкоциты|тромбоциты|креатинин|мочевина|алт|аст|билирубин|ггт|глютамил|прогестерон|эстрадиол|лг|фсг|пролактин|кортизол|андростендион|фибриноген|ачтв|мно/.test(name);
     }
-    function freshnessLabel(state) {
-      return state === 'due' ? 'пора обновить' : state === 'soon' ? 'скоро обновить' : 'свежо';
+    function systemName(category) {
+      if (/гормоны|щитовид/.test(category.toLowerCase())) return 'Endocrine / Fertility';
+      if (/липиды|углеводы|инсулин/.test(category.toLowerCase())) return 'Metabolism / Heart';
+      if (/железо|витамины|минералы/.test(category.toLowerCase())) return 'Nutrients';
+      if (/печень|почки|биохимия|коагул/.test(category.toLowerCase())) return 'Biochemistry';
+      if (/оак|гематология/.test(category.toLowerCase())) return 'Blood';
+      if (/инфекции|иммунология/.test(category.toLowerCase())) return 'Immunity';
+      return category;
     }
-    function freshnessBadge(item) {
-      const state = freshness(item).state;
-      const cls = state === 'due' ? 'high' : state === 'soon' ? 'low' : 'ok';
-      return '<span class="badge badge-' + cls + '">' + freshnessLabel(state) + '</span>';
-    }
-    function freshnessItems(patient) {
-      const rank = { due: 0, soon: 1, fresh: 2 };
-      return allAnalyses(patient)
-        .filter(isRefreshCandidate)
-        .map(item => Object.assign({}, item, { freshness: freshness(item) }))
-        .sort((a, b) => rank[a.freshness.state] - rank[b.freshness.state] || b.freshness.age - a.freshness.age || a.category.localeCompare(b.category));
-    }
+    function currentPatient() { return data.patients[activePatient]; }
     function latestDateFor(patient) {
-      const dates = allAnalyses(patient).map(item => item.latestDate).filter(Boolean).sort().reverse();
-      return dates[0] || '';
-    }
-    function latestBatchCount(patient) {
-      const date = latestDateFor(patient);
-      return allAnalyses(patient).filter(item => item.latestDate === date).length;
+      return allAnalyses(patient).map(item => item.latestDate).filter(Boolean).sort().reverse()[0] || '';
     }
     function statusSummary(patient) {
       const values = allAnalyses(patient);
@@ -317,175 +273,212 @@
         text: values.filter(item => item.latestStatus === 'text').length
       };
     }
-    function freshnessSummary(patient) {
-      const values = freshnessItems(patient);
-      return {
-        due: values.filter(item => item.freshness.state === 'due').length,
-        soon: values.filter(item => item.freshness.state === 'soon').length,
-        fresh: values.filter(item => item.freshness.state === 'fresh').length,
-        items: values
-      };
+    function healthScore(items) {
+      if (!items.length) return 0;
+      const score = items.reduce((sum, item) => sum + (item.latestStatus === 'ok' ? 1 : item.latestStatus === 'text' ? .55 : .2), 0) / items.length * 100;
+      return Math.round(score);
     }
-    function freshnessPanel(patient) {
-      const summary = freshnessSummary(patient);
-      const total = Math.max(summary.due + summary.soon + summary.fresh, 1);
-      const rows = summary.items
-        .filter(item => item.freshness.state !== 'fresh')
-        .slice(0, 28)
-        .map(item => '<tr class="freshness-row" data-category="' + esc(item.category) + '" data-search="' + esc((item.testName + ' ' + item.category + ' ' + item.latestResult).toLowerCase()) + '">' +
-          '<td>' + esc(item.testName) + '<small>' + esc(item.category) + '</small></td>' +
-          '<td>' + esc(item.latestDate) + '<small>' + item.freshness.age + ' дн. назад</small></td>' +
-          '<td>' + freshnessBadge(item) + '<small>цикл ' + item.freshness.cadence + ' дн.</small></td>' +
-        '</tr>').join('');
-      const body = rows || '<tr><td colspan="3" class="empty">Все ключевые мониторинговые показатели выглядят свежими по выбранному циклу.</td></tr>';
-      return '<section class="freshness-section">' +
-        '<article class="card freshness-summary"><h2>Что сдать свежее</h2><div class="freshness-total"><strong>' + summary.due + '</strong><span class="delta alert">пора обновить</span></div>' +
-        '<div class="freshness-bar"><span class="freshness-due" style="width:' + (summary.due / total * 100).toFixed(1) + '%"></span><span class="freshness-soon" style="width:' + (summary.soon / total * 100).toFixed(1) + '%"></span><span class="freshness-fresh" style="width:' + (summary.fresh / total * 100).toFixed(1) + '%"></span></div>' +
-        '<div class="freshness-legend"><div><span><i class="freshness-due"></i>Пора обновить</span><b>' + summary.due + '</b></div><div><span><i class="freshness-soon"></i>Скоро</span><b>' + summary.soon + '</b></div><div><span><i class="freshness-fresh"></i>Свежо</span><b>' + summary.fresh + '</b></div></div>' +
-        '<small>Расчет только по ключевым мониторинговым биомаркерам. Базовый цикл: 6 месяцев.</small></article>' +
-        '<article class="card freshness-list"><table class="mini-table"><thead><tr><th>Анализ</th><th>Последний</th><th>Статус свежести</th></tr></thead><tbody>' + body + '</tbody></table></article>' +
+    function topCards(patient) {
+      const status = statusSummary(patient);
+      const total = Math.max(status.ok + status.high + status.low + status.text, 1);
+      const latest = latestDateFor(patient);
+      const latestCount = allAnalyses(patient).filter(item => item.latestDate === latest).length;
+      const refresh = allAnalyses(patient).filter(isRefreshCandidate).map(item => freshness(item));
+      const due = refresh.filter(item => item.state === 'due').length;
+      const score = healthScore(allAnalyses(patient));
+      return '<section class="top-grid">' +
+        '<article class="card stat-card"><div class="stat-label">Patient</div><div class="stat-value"><strong>' + esc(patient.tests) + '</strong><span class="delta">biomarkers</span></div><div>' + esc(patient.name) + '</div></article>' +
+        '<article class="card stat-card"><div class="stat-label">Health Score</div><div class="stat-value"><strong>' + score + '</strong><span class="delta">/ 100</span></div><div class="status-track"><span class="st-ok" style="width:' + (status.ok/total*100).toFixed(1) + '%"></span><span class="st-low" style="width:' + (status.low/total*100).toFixed(1) + '%"></span><span class="st-high" style="width:' + (status.high/total*100).toFixed(1) + '%"></span><span class="st-text" style="width:' + (status.text/total*100).toFixed(1) + '%"></span></div></article>' +
+        '<article class="card stat-card"><div class="stat-label">Latest Batch</div><div class="stat-value"><strong>' + latestCount + '</strong><span class="delta">' + esc(latest) + '</span></div><div>самые свежие результаты</div></article>' +
+        '<article class="card stat-card"><div class="stat-label">Retest Plan</div><div class="stat-value"><strong>' + due + '</strong><span class="delta warn">to refresh</span></div><div>по ключевым мониторинговым маркерам</div></article>' +
       '</section>';
     }
-    function sparkMini(points) {
-      const numeric = points.filter(p => typeof p.value === 'number' && Number.isFinite(p.value));
-      if (numeric.length < 2) return '<svg class="spark-mini"><path d="M4 16H80" stroke="#d8dee8" stroke-width="2" stroke-linecap="round"/></svg>';
-      const min = Math.min(...numeric.map(p => p.value));
-      const max = Math.max(...numeric.map(p => p.value));
-      const span = max - min || 1;
-      const pts = numeric.map((p, i) => {
-        const x = 4 + i * (76 / Math.max(numeric.length - 1, 1));
-        const y = 5 + (1 - ((p.value - min) / span)) * 20;
-        return [x, y];
+    function systemCards(patient) {
+      const groups = new Map();
+      allAnalyses(patient).forEach(item => {
+        const name = systemName(item.category);
+        if (!groups.has(name)) groups.set(name, []);
+        groups.get(name).push(item);
       });
-      const poly = pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
-      return '<svg class="spark-mini" viewBox="0 0 84 30"><polyline points="' + poly + '" fill="none" stroke="#4f5df7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    }
-    function matrixSection(patient) {
-      const analyses = allAnalyses(patient);
-      const dates = [...new Set(analyses.flatMap(item => item.points.map(point => point.date)).filter(Boolean))].sort().reverse();
-      const headers = dates.map(date => '<th class="date-col">' + esc(date) + '</th>').join('');
-      const rows = analyses.map(item => {
-        const cells = dates.map(date => {
-          const points = item.points.filter(point => point.date === date);
-          if (!points.length) return '<td></td>';
-          const html = points.map(point => '<div class="matrix-cell"><b><span class="status-dot status-' + esc(point.status || 'text') + '"></span>' + esc(((point.result || '') + ' ' + (point.unit || '')).trim()) + '</b><small>' + esc(point.reference || '') + '</small></div>').join('');
-          return '<td>' + html + '</td>';
-        }).join('');
-        return '<tr class="matrix-row" data-category="' + esc(item.category) + '" data-search="' + esc((item.testName + ' ' + item.category + ' ' + item.points.map(p => p.result).join(' ')).toLowerCase()) + '">' +
-          '<td><div class="matrix-test">' + esc(item.testName) + '<small>' + esc(item.category) + '</small></div></td><td class="trend-col">' + sparkMini(item.points) + '</td>' + cells + '</tr>';
+      const cards = [...groups.entries()].sort((a,b) => healthScore(b[1]) - healthScore(a[1])).map(([name, items]) => {
+        const highLow = items.filter(item => item.latestStatus === 'high' || item.latestStatus === 'low').length;
+        const dynamic = items.filter(item => item.hasDynamics).length;
+        const fresh = items.filter(item => freshness(item).state === 'fresh').length;
+        return '<article class="system-card"><div class="system-head"><b>' + esc(name) + '</b><span class="system-score">' + healthScore(items) + '</span></div><div class="status-track"><span class="st-ok" style="width:' + (healthScore(items)).toFixed(1) + '%"></span></div><div class="system-meta"><div><strong>' + items.length + '</strong>markers</div><div><strong>' + highLow + '</strong>out</div><div><strong>' + dynamic + '</strong>trends</div></div></article>';
       }).join('');
-      return '<section class="card matrix-section"><div class="card-head"><h2>Matrix view</h2><span>анализ × даты</span></div><div class="matrix-wrap"><table class="matrix"><thead><tr><th>Анализ</th><th class="trend-col">Тренд</th>' + headers + '</tr></thead><tbody>' + rows + '</tbody></table></div></section>';
+      return '<article class="card"><div class="card-head"><h2>Health Systems</h2><span>score by marker status</span></div><div class="system-grid">' + cards + '</div></article>';
     }
-    function latestRow(item) {
+    function actionPlan(patient) {
+      const due = allAnalyses(patient).filter(isRefreshCandidate).map(item => Object.assign({}, item, { fresh:freshness(item) })).filter(item => item.fresh.state !== 'fresh').sort((a,b) => b.fresh.age - a.fresh.age);
+      const out = allAnalyses(patient).filter(item => item.latestStatus === 'high' || item.latestStatus === 'low').sort((a,b) => (b.latestDate || '').localeCompare(a.latestDate || ''));
+      const items = [...due.slice(0, 5), ...out.slice(0, 5)].slice(0, 9);
+      const rows = items.map(item => {
+        const isDue = item.fresh && item.fresh.state !== 'fresh';
+        const dotClass = isDue ? 'background:var(--amber)' : item.latestStatus === 'high' ? 'background:var(--red)' : 'background:var(--blue)';
+        const status = isDue ? 'сдать свежее' : statusLabel(item.latestStatus);
+        return '<div class="action-item"><span class="action-dot" style="' + dotClass + '"></span><div><div class="action-title">' + esc(item.testName) + '</div><span class="action-sub">' + esc(item.category) + ' · ' + esc(item.latestDate) + ' · ' + esc(((item.latestResult || '') + ' ' + (item.unit || '')).trim()) + '</span></div>' + badge(isDue ? 'low' : item.latestStatus) + '</div>';
+      }).join('');
+      return '<article class="card"><div class="card-head"><h2>Action Plan</h2><span>retest + out of range</span></div><div class="action-list">' + (rows || '<div class="empty">Нет срочных пунктов по текущей логике.</div>') + '</div></article>';
+    }
+    function changesCard(patient) {
+      const changed = allAnalyses(patient).filter(item => numericPoints(item).length >= 2).map(item => Object.assign({}, item, { trend:trend(item) })).filter(item => item.trend.label !== 'stable').sort((a,b) => Math.abs(b.trend.diff || 0) - Math.abs(a.trend.diff || 0)).slice(0, 10);
+      const rows = changed.map(item => {
+        const points = numericPoints(item);
+        const first = points[0];
+        const last = points[points.length - 1];
+        const sign = item.trend.label === 'up' ? '+' : '';
+        return '<div class="change-row"><div><div class="change-name">' + esc(item.testName) + '</div><span class="change-sub">' + esc(first.date) + ': ' + esc(first.result) + ' → ' + esc(last.date) + ': ' + esc(last.result) + '</span></div><span class="delta ' + esc(item.trend.cls) + '">' + sign + (item.trend.diff || 0).toFixed(0) + '%</span></div>';
+      }).join('');
+      return '<article class="card"><div class="card-head"><h2>Что изменилось</h2><span>largest moves</span></div><div class="change-list">' + (rows || '<div class="empty">Недостаточно динамики для сравнения.</div>') + '</div></article>';
+    }
+    function overview(patient) {
+      return topCards(patient) + '<section class="overview-grid">' + systemCards(patient) + actionPlan(patient) + '</section><section class="changes-grid">' + changesCard(patient) + fertilityCard(patient) + latestBatchCard(patient) + '</section>';
+    }
+    function latestMatching(patient, pattern) {
+      return allAnalyses(patient).filter(item => pattern.test((item.testName || '').toLowerCase())).sort((a,b) => (b.latestDate || '').localeCompare(a.latestDate || ''))[0] || null;
+    }
+    function fertilityCard(patient) {
+      const targets = [
+        ['Прогестерон', /прогестерон/],
+        ['ХГЧ', /хгч/],
+        ['АМГ', /антимюллер|амг|amh/],
+        ['Андростендион', /андростендион/],
+        ['Тестостерон', /тестостерон/],
+        ['ГСПГ', /гспг|глобулин, связывающий/],
+      ];
+      const rows = targets.map(([label, pattern]) => {
+        const item = latestMatching(patient, pattern);
+        return '<div class="change-row"><div><div class="change-name">' + esc(label) + '</div><span class="change-sub">' + (item ? esc(item.latestDate + ' · ' + ((item.latestResult || '') + ' ' + (item.unit || '')).trim()) : 'нет данных') + '</span></div>' + (item ? badge(item.latestStatus) : '<span class="badge badge-text">none</span>') + '</div>';
+      }).join('');
+      return '<article class="card"><div class="card-head"><h2>Фертильность</h2><span>cycle markers</span></div><div class="change-list">' + rows + '</div></article>';
+    }
+    function latestBatchCard(patient) {
+      const date = latestDateFor(patient);
+      const rows = allAnalyses(patient).filter(item => item.latestDate === date).slice(0, 12).map(item => '<div class="change-row"><div><div class="change-name">' + esc(item.testName) + '</div><span class="change-sub">' + esc(item.category) + ' · ' + esc(((item.latestResult || '') + ' ' + (item.unit || '')).trim()) + '</span></div>' + badge(item.latestStatus) + '</div>').join('');
+      return '<article class="card"><div class="card-head"><h2>Последний пакет</h2><span>' + esc(date) + '</span></div><div class="change-list">' + rows + '</div></article>';
+    }
+    function spark(item, big=false) {
+      const points = numericPoints(item);
+      const ref = parseRef(item.latestReference);
+      const width = big ? 820 : 320;
+      const height = big ? 300 : 82;
+      if (points.length < 2) return '<svg viewBox="0 0 ' + width + ' ' + height + '"><text x="12" y="' + (height/2) + '" fill="#7a8495" font-size="13" font-weight="700">single result</text></svg>';
+      let values = points.map(p => p.value);
+      if (ref) { if (ref.lo !== null) values.push(ref.lo); if (ref.hi !== null) values.push(ref.hi); }
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const span = max - min || 1;
+      const xFor = i => 16 + i * ((width - 32) / Math.max(points.length - 1, 1));
+      const yFor = v => 14 + (1 - ((v - min) / span)) * (height - 34);
+      const band = ref && ref.lo !== null && ref.hi !== null ? '<rect x="8" y="' + yFor(ref.hi).toFixed(1) + '" width="' + (width-16) + '" height="' + Math.max(4, yFor(ref.lo)-yFor(ref.hi)).toFixed(1) + '" rx="6" fill="rgba(35,169,111,.12)"></rect>' : '';
+      const grid = '<path d="M8 ' + (height*.25).toFixed(1) + 'H' + (width-8) + ' M8 ' + (height*.5).toFixed(1) + 'H' + (width-8) + ' M8 ' + (height*.75).toFixed(1) + 'H' + (width-8) + '" stroke="#eef1f6"></path>';
+      const poly = points.map((p,i) => xFor(i).toFixed(1) + ',' + yFor(p.value).toFixed(1)).join(' ');
+      const circles = points.map((p,i) => '<circle cx="' + xFor(i).toFixed(1) + '" cy="' + yFor(p.value).toFixed(1) + '" r="' + (big ? 5 : 3.5) + '" fill="#4f5df7"><title>' + esc(p.date + ': ' + p.result) + '</title></circle>').join('');
+      return '<svg viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="none">' + band + grid + '<polyline points="' + poly + '" fill="none" stroke="#4f5df7" stroke-width="' + (big ? 4 : 3) + '" stroke-linecap="round" stroke-linejoin="round"></polyline>' + circles + '</svg>';
+    }
+    function biomarkerCard(item) {
       const latest = ((item.latestResult || '') + ' ' + (item.unit || '')).trim();
-      const search = (item.testName + ' ' + item.category + ' ' + latest + ' ' + item.latestDate).toLowerCase();
-      return '<div class="latest-row" data-category="' + esc(item.category) + '" data-search="' + esc(search) + '">' +
-        '<div class="latest-name">' + esc(item.testName) + '</div>' +
-        '<div class="latest-result">' + esc(latest) + '</div>' +
-        '<div class="latest-date">' + esc(item.latestDate) + '</div>' +
-        '<div>' + badge(item.latestStatus) + '</div>' +
-      '</div>';
+      const tr = trend(item);
+      const points = item.points.slice(-4).map(p => '<div class="point"><b>' + esc(p.date) + '</b><span>' + esc(((p.result || '') + ' ' + (p.unit || '')).trim()) + '</span></div>').join('');
+      const key = item.category + '|' + item.testName + '|' + item.unit;
+      return '<article class="card biomarker-card" data-key="' + esc(key) + '" data-category="' + esc(item.category) + '" data-search="' + esc((item.testName + ' ' + item.category + ' ' + latest + ' ' + item.latestReference).toLowerCase()) + '">' +
+        '<div class="biomarker-top"><h3 class="biomarker-name">' + esc(item.testName) + '</h3><div class="biomarker-meta"><span>' + esc(item.category) + '</span>' + badge(item.latestStatus) + '</div></div>' +
+        '<div class="latest"><strong>' + esc(latest) + '</strong><small>' + esc(item.latestDate) + '</small></div><div class="spark">' + spark(item) + '</div>' +
+        '<div class="biomarker-meta" style="padding:0 15px 8px"><span>ref: ' + esc(item.latestReference || 'none') + '</span><span class="delta ' + esc(tr.cls) + '">' + esc(tr.label) + '</span></div>' +
+        '<div class="card-timeline">' + points + '</div></article>';
     }
-    function latestByCategory(patient) {
-      const blocks = patient.categories.map(category => {
-        const analyses = category.analyses
-          .slice()
-          .sort((a, b) => (b.latestDate || '').localeCompare(a.latestDate || '') || a.testName.localeCompare(b.testName));
-        const highLow = analyses.filter(item => item.latestStatus === 'high' || item.latestStatus === 'low').length;
-        return '<article class="card latest-category" data-category="' + esc(category.name) + '">' +
-          '<div class="latest-category-head"><h3>' + esc(category.name) + '</h3><span>' + analyses.length + ' · ' + highLow + ' вне</span></div>' +
-          '<div class="latest-list">' + analyses.map(latestRow).join('') + '</div>' +
-        '</article>';
+    function cardsView(patient) {
+      const rows = visibleAnalyses(patient).map(biomarkerCard).join('');
+      return '<div class="view-head"><h2>Biomarkers</h2><span class="date-pill">' + visibleAnalyses(patient).length + ' visible</span></div><section class="biomarker-grid">' + (rows || '<article class="card empty">Ничего не найдено.</article>') + '</section>';
+    }
+    function tableView(patient) {
+      const rows = visibleAnalyses(patient).map(item => '<tr><td class="test-cell">' + esc(item.testName) + '<span class="muted">' + esc(item.category) + '</span></td><td>' + esc(item.latestDate) + '</td><td><b>' + esc(((item.latestResult || '') + ' ' + (item.unit || '')).trim()) + '</b></td><td>' + badge(item.latestStatus) + '</td><td>' + esc(item.latestReference || '') + '</td><td>' + esc(item.points.map(p => p.date + ': ' + p.result).join('; ')) + '</td></tr>').join('');
+      return '<div class="view-head"><h2>Table</h2><span class="date-pill">all values by dates</span></div><section class="card"><div class="table-wrap"><table><thead><tr><th>Analysis</th><th>Latest date</th><th>Latest result</th><th>Status</th><th>Reference</th><th>History</th></tr></thead><tbody>' + rows + '</tbody></table></div></section>';
+    }
+    function timelineView(patient) {
+      const buckets = new Map();
+      visibleAnalyses(patient).forEach(item => item.points.forEach(point => {
+        if (!buckets.has(point.date)) buckets.set(point.date, []);
+        buckets.get(point.date).push({ item, point });
+      }));
+      const blocks = [...buckets.entries()].sort((a,b) => b[0].localeCompare(a[0])).map(([date, rows]) => '<section class="date-group"><aside class="date-stamp"><strong>' + esc(date) + '</strong><span>' + rows.length + ' values</span></aside><div class="date-items">' + rows.slice(0, 60).map(row => '<article class="date-item"><b>' + esc(row.item.testName) + '</b><span class="muted">' + esc(row.item.category) + '</span><div>' + esc(((row.point.result || '') + ' ' + (row.point.unit || '')).trim()) + '</div></article>').join('') + '</div></section>').join('');
+      return '<div class="view-head"><h2>Timeline</h2><span class="date-pill">history by lab date</span></div><div class="timeline-panel">' + blocks + '</div>';
+    }
+    function selectedAnalysis(patient) {
+      const analyses = visibleAnalyses(patient).filter(item => numericPoints(item).length > 0);
+      if (!selectedKey && analyses.length) selectedKey = analyses[0].category + '|' + analyses[0].testName + '|' + analyses[0].unit;
+      return analyses.find(item => (item.category + '|' + item.testName + '|' + item.unit) === selectedKey) || analyses[0] || null;
+    }
+    function graphView(patient) {
+      const analyses = visibleAnalyses(patient).filter(item => numericPoints(item).length > 0);
+      const selected = selectedAnalysis(patient);
+      const buttons = analyses.map(item => {
+        const key = item.category + '|' + item.testName + '|' + item.unit;
+        return '<button class="marker-button' + (selected && key === (selected.category + '|' + selected.testName + '|' + selected.unit) ? ' active' : '') + '" data-key="' + esc(key) + '"><b>' + esc(item.testName) + '</b><span>' + esc(item.category) + ' · ' + esc(((item.latestResult || '') + ' ' + (item.unit || '')).trim()) + '</span></button>';
       }).join('');
-      return '<section class="latest-section"><div class="section-title"><h2>Актуальные результаты по категориям</h2><span>компактный срез последних значений</span></div><div class="latest-category-grid">' + blocks + '</div></section>';
+      if (!selected) return '<div class="empty">Нет числовых маркеров для графика.</div>';
+      const rows = selected.points.map(p => '<tr><td>' + esc(p.date) + '</td><td><b>' + esc(((p.result || '') + ' ' + (p.unit || '')).trim()) + '</b></td><td>' + badge(p.status) + '</td><td>' + esc(p.reference || '') + '</td></tr>').join('');
+      return '<div class="view-head"><h2>Graph</h2><span class="date-pill">selected biomarker</span></div><section class="graph-layout"><article class="card marker-list">' + buttons + '</article><article class="card graph-card"><div class="graph-head"><div class="graph-title"><b>' + esc(selected.testName) + '</b><span>' + esc(selected.category) + ' · ref ' + esc(selected.latestReference || 'none') + '</span></div>' + badge(selected.latestStatus) + '</div><div class="big-chart">' + spark(selected, true) + '</div><div class="graph-table"><table><thead><tr><th>Date</th><th>Result</th><th>Status</th><th>Reference</th></tr></thead><tbody>' + rows + '</tbody></table></div></article></section>';
+    }
+    function renderCategoryTabs(patient) {
+      const tabs = ['<button class="category-chip active" data-category="all">All categories</button>'].concat(patient.categories.map(c => '<button class="category-chip" data-category="' + esc(c.name) + '">' + esc(c.name) + ' · ' + c.count + '</button>')).join('');
+      categoryTabs.innerHTML = tabs;
+      categoryTabs.querySelectorAll('.category-chip').forEach(btn => btn.addEventListener('click', () => {
+        categoryTabs.querySelectorAll('.category-chip').forEach(item => item.classList.remove('active'));
+        btn.classList.add('active');
+        activeCategory = btn.dataset.category;
+        selectedKey = '';
+        renderPages();
+      }));
     }
     function pageHtml(patient, index) {
-      const sections = patient.categories.map(c => '<button class="section-chip" data-section="' + esc(c.name) + '">' + esc(c.name) + ' · ' + c.count + '</button>').join('');
-      const status = statusSummary(patient);
-      const stale = freshnessSummary(patient);
-      const latestDate = latestDateFor(patient);
-      const top = '<section class="top-grid">' +
-        '<article class="card"><div class="card-head"><h2>Пациент</h2><span>страница</span></div><div class="stat-body"><div class="stat-line"><strong>' + esc(patient.tests) + '</strong><span class="delta">показателей</span></div><div>' + esc(patient.name) + '</div></div></article>' +
-        '<article class="card"><div class="card-head"><h2>Актуальный срез</h2><span>' + esc(latestDate) + '</span></div><div class="stat-body"><div class="stat-line"><strong>' + latestBatchCount(patient) + '</strong><span class="delta">самые свежие</span></div><div>последний пакет результатов</div></div></article>' +
-        '<article class="card"><div class="card-head"><h2>Отклонения</h2><span>по референсам</span></div><div class="stat-body"><div class="stat-line"><strong>' + (status.high + status.low) + '</strong><span class="delta alert">high / low</span></div><div>' + status.ok + ' OK · ' + status.text + ' текстовых</div></div></article>' +
-        '<article class="card"><div class="card-head"><h2>Свежесть</h2><span>мониторинг</span></div><div class="stat-body"><div class="stat-line"><strong>' + stale.due + '</strong><span class="delta warn">надо сдать</span></div><div>' + stale.soon + ' скоро · ' + stale.fresh + ' свежо</div></div></article>' +
-      '</section>';
-      const toolbar = '<section class="card toolbar"><input class="search" data-page="' + index + '" placeholder="Поиск по анализам пациента"><div class="section-nav"><button class="section-chip active" data-section="all">Все разделы</button>' + sections + '</div></section>';
-      const latest = latestByCategory(patient);
-      const categories = patient.categories.map(category => {
-        const cards = category.analyses.map(analysisCard).join('');
-        return '<section class="category-section" data-category="' + esc(category.name) + '"><div class="section-title"><h2>' + esc(category.name) + '</h2><span>' + category.count + ' analyses · ' + category.dynamicCount + ' dynamic</span></div><div class="analysis-grid">' + cards + '</div></section>';
-      }).join('');
-      return '<div class="patient-page' + (index === 0 ? ' active' : '') + '" data-page="' + index + '">' + top + cyclePanel(patient) + toolbar + freshnessPanel(patient) + latest + matrixSection(patient) + categories + '</div>';
+      return '<div class="patient-page' + (index === activePatient ? ' active' : '') + '" data-page="' + index + '">' +
+        '<section class="mode-panel ' + (activeMode === 'overview' ? 'active' : '') + '">' + overview(patient) + '</section>' +
+        '<section class="mode-panel ' + (activeMode === 'cards' ? 'active' : '') + '">' + cardsView(patient) + '</section>' +
+        '<section class="mode-panel ' + (activeMode === 'table' ? 'active' : '') + '">' + tableView(patient) + '</section>' +
+        '<section class="mode-panel ' + (activeMode === 'timeline' ? 'active' : '') + '">' + timelineView(patient) + '</section>' +
+        '<section class="mode-panel ' + (activeMode === 'graph' ? 'active' : '') + '">' + graphView(patient) + '</section>' +
+      '</div>';
     }
-    function render() {
+    function renderPages() {
       pagesEl.innerHTML = data.patients.map(pageHtml).join('');
-      bindPageControls();
-      filterPage();
-    }
-    function bindPageControls() {
-      document.querySelectorAll('.section-chip').forEach(btn => btn.addEventListener('click', () => {
-        const page = document.querySelector('.patient-page.active');
-        page.querySelectorAll('.section-chip').forEach(item => item.classList.remove('active'));
-        btn.classList.add('active');
-        activeSection = btn.dataset.section;
-        filterPage();
+      document.querySelectorAll('.biomarker-card').forEach(card => card.addEventListener('click', () => {
+        selectedKey = card.dataset.key;
+        activeMode = 'graph';
+        modeTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.mode === activeMode));
+        renderPages();
       }));
-      document.querySelectorAll('.search').forEach(input => input.addEventListener('input', () => {
-        query = input.value.trim().toLowerCase();
-        filterPage();
+      document.querySelectorAll('.marker-button').forEach(button => button.addEventListener('click', () => {
+        selectedKey = button.dataset.key;
+        renderPages();
       }));
     }
-    function filterPage() {
-      const page = document.querySelector('.patient-page.active');
-      if (!page) return;
-      page.querySelectorAll('.latest-category').forEach(category => {
-        const sectionOk = activeSection === 'all' || category.dataset.category === activeSection;
-        let visibleRows = 0;
-        category.querySelectorAll('.latest-row').forEach(row => {
-          const queryOk = !query || row.dataset.search.includes(query);
-          const show = sectionOk && queryOk;
-          row.style.display = show ? '' : 'none';
-          if (show) visibleRows += 1;
-        });
-        category.style.display = visibleRows ? '' : 'none';
-      });
-      page.querySelectorAll('.freshness-row').forEach(row => {
-        const sectionOk = activeSection === 'all' || row.dataset.category === activeSection;
-        const queryOk = !query || row.dataset.search.includes(query);
-        row.style.display = sectionOk && queryOk ? '' : 'none';
-      });
-      page.querySelectorAll('.matrix-row').forEach(row => {
-        const sectionOk = activeSection === 'all' || row.dataset.category === activeSection;
-        const queryOk = !query || row.dataset.search.includes(query);
-        row.style.display = sectionOk && queryOk ? '' : 'none';
-      });
-      page.querySelectorAll('.category-section').forEach(section => {
-        const sectionOk = activeSection === 'all' || section.dataset.category === activeSection;
-        let visibleCards = 0;
-        section.querySelectorAll('.analysis-card').forEach(card => {
-          const queryOk = !query || card.dataset.search.includes(query);
-          const show = sectionOk && queryOk;
-          card.style.display = show ? '' : 'none';
-          if (show) visibleCards += 1;
-        });
-        section.style.display = visibleCards ? '' : 'none';
-      });
+    function renderAll() {
+      renderCategoryTabs(currentPatient());
+      renderPages();
     }
-    tabs.forEach(tab => tab.addEventListener('click', () => {
-      tabs.forEach(item => item.classList.remove('active'));
+    patientTabs.forEach(tab => tab.addEventListener('click', () => {
+      patientTabs.forEach(item => item.classList.remove('active'));
       tab.classList.add('active');
       activePatient = Number(tab.dataset.patient);
-      activeSection = 'all';
+      activeCategory = 'all';
       query = '';
-      document.querySelectorAll('.patient-page').forEach(page => page.classList.remove('active'));
-      document.querySelector('.patient-page[data-page="' + activePatient + '"]').classList.add('active');
-      const page = document.querySelector('.patient-page.active');
-      page.querySelector('.search').value = '';
-      page.querySelectorAll('.section-chip').forEach((chip, idx) => chip.classList.toggle('active', idx === 0));
-      filterPage();
+      selectedKey = '';
+      searchInput.value = '';
+      renderAll();
     }));
-    render();
+    modeTabs.forEach(tab => tab.addEventListener('click', () => {
+      modeTabs.forEach(item => item.classList.remove('active'));
+      tab.classList.add('active');
+      activeMode = tab.dataset.mode;
+      renderPages();
+    }));
+    searchInput.addEventListener('input', () => {
+      query = searchInput.value.trim().toLowerCase();
+      selectedKey = '';
+      renderPages();
+    });
+    renderAll();
   </script>
 </body>
 </html>
